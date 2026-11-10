@@ -17,7 +17,7 @@
         "current": 120.0,
         "growth_percent": 20.0
       },
-      "workflow_ms": 51.127161999829696,
+      "workflow_ms": 45.487715000490425,
       "tool_calls": 3,
       "model_tokens": 0
     },
@@ -37,7 +37,7 @@
         "current": 120.0,
         "growth_percent": 20.0
       },
-      "workflow_ms": 11.18540999959805,
+      "workflow_ms": 9.544677001031232,
       "tool_calls": 3,
       "model_tokens": 0
     },
@@ -57,7 +57,7 @@
         "current": 120.0,
         "growth_percent": 20.0
       },
-      "workflow_ms": 231.77633300019806,
+      "workflow_ms": 212.5204029998713,
       "tool_calls": 3,
       "model_tokens": 0
     },
@@ -73,7 +73,7 @@
         "current": 120.0,
         "growth_percent": 20.0
       },
-      "workflow_ms": 6.217105000359879,
+      "workflow_ms": 5.546492000576109,
       "tool_calls": 2,
       "model_tokens": 0
     },
@@ -93,7 +93,7 @@
         "current": 120.0,
         "growth_percent": 20.0
       },
-      "workflow_ms": 11.245843999859062,
+      "workflow_ms": 10.922584000581992,
       "tool_calls": 3,
       "model_tokens": 0
     },
@@ -109,7 +109,7 @@
         "current": 120.0,
         "growth_percent": 20.0
       },
-      "workflow_ms": 8.573173000513634,
+      "workflow_ms": 7.738988999335561,
       "tool_calls": 2,
       "model_tokens": 0
     },
@@ -125,7 +125,7 @@
         "current": 120.0,
         "growth_percent": 20.0
       },
-      "workflow_ms": 7.494026999665948,
+      "workflow_ms": 7.3402990001341095,
       "tool_calls": 2,
       "model_tokens": 0
     }

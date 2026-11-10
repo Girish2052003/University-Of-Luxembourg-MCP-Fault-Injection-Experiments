@@ -1,24 +1,39 @@
-# Part 2 requirements and evidence
+# Part 2 coverage
 
-This is an original implementation checklist, not a reproduction of a third-party assignment. Part 1 and personal written answers are not part of this package.
+Checked on **10 November 2026** against the supplied Part 2 Option A brief and recruitment email. All required Part 2 items are covered by the implementation and saved evidence below. This page summarises the project's coverage; the university's documents are not included in the repository.
 
-| Behaviour/deliverable | Implementation | Executable check / evidence |
+## Required behaviour and files
+
+| Item | Status | Implementation and evidence |
 | --- | --- | --- |
-| Real client-proxy-server path | Official SDK Client, subprocess proxy and MCPServer | `test_official_sdk_direct_server_baseline`, `test_real_sdk_proxy_faults_and_liveness` |
-| Unchanged normal traffic | Raw bytes forwarded, copies parsed | `test_byte_preserving_disabled_proxy_and_protocol_errors`; direct and disabled demo |
-| Added latency | Async selected-response hold | SDK latency case; concurrent response test; `latency.jsonl` |
-| Valid error response | Successful tool result replaced with isError true | Core error test, SDK error case, `error.jsonl` |
-| Plausible wrong successful result | Page revenue span changed with schema intact | Core representation test; SDK semantic case; summary records wrong 50% |
-| Tool/fault/frequency configurable | Strict Config and per-tool Policy | Validation, p0/p1, occurrence and tool-isolation tests; saved configs |
-| Reproducibility | Stable SHA-256 selection |100-call unit replay and two 20-call real-process replays |
-| Every applied fault logged | JSONL Evidence, write-before-send | Core evidence checks; each SDK/demo case requires exactly one applied event |
-| Simple real MCP server | Three synthetic tools | Real SDK discovery/list/call tests; safe-calculator negative case |
-| Request fault extension | Exact argument replacement | Request unit test, SDK request case, `request.jsonl` |
-| Incomplete-data extension | Remove factual sentence, retain response fields | Omission unit/SDK cases, `omission.jsonl` |
-| Independent correctness | Frozen answer sheet separate from workflow | Oracle tests reject wrong values and wrong arithmetic; semantic demo |
-| Operational checks | Correlated replies, cancellation and bounded shutdown | Concurrent typed-ID, real SDK timeout, repeated cancellation, immediate EOF cancellation, child failure and invalid-startup tests |
-| Honest injection accounting | Validate candidates and record evidence before delivery | Malformed-result skip tests and evidence-write-failure regression |
-| README and short demo log | README and evidence/REPORT.md | Documented clean-install commands; actual saved outcomes |
-| Code package | Versioned repository with pinned dependencies | Clean-install verification recorded in verification.md |
+| A working MCP client–proxy–server connection | Complete | Official SDK client and server with the proxy between them; SDK integration tests |
+| Normal traffic passes through unchanged | Complete | Original bytes are forwarded when no change applies; raw-message comparison and disabled-proxy demo |
+| Added latency | Complete | A selected reply is held asynchronously; SDK timing check, concurrent-reply test and [latency log](../evidence/latency.jsonl) |
+| An error response | Complete | A valid tool result with `isError: true`; SDK checks and [error log](../evidence/error.jsonl) |
+| A plausible wrong result that still looks successful | Complete | Revenue changes from 120 to 150 while the result remains successful; [semantic log](../evidence/semantic.jsonl) and independently rejected 50% answer |
+| Configurable tool, fault and frequency | Complete | JSON settings for tool, mechanism, probability and optional call number; configuration and targeting tests |
+| Reproducible fault decisions | Complete | Same configuration and ordered calls produce the same decisions; unit replay and two separate 20-call runs |
+| Every injected fault is logged | Complete | JSONL records are written before changed messages are sent; fault-count checks and a failed-write regression |
+| Demonstration with a simple MCP server | Complete | Local SDK server with three tools; direct baseline and all five fault conditions |
+| Repository or ZIP package | Complete | Versioned source, tests, configurations and evidence in this repository |
+| README with running steps, choices and limitations | Complete | [README](../README.md), [design](design.md) and [verification](verification.md) |
+| A short demo log showing each fault | Complete | [Measured report](../evidence/REPORT.md), [results](../evidence/summary.json) and a separate JSONL log for each fault |
 
-All five mechanisms are implemented. The demonstration contains no paid calls and makes no claims about general LLM robustness. The exact test count and final run details are in [verification.md](verification.md).
+## Additional features requested for this project
+
+| Feature | Status | Evidence |
+| --- | --- | --- |
+| Five fault mechanisms | Complete | The three required mechanisms plus request corruption and omission; all exercised through the SDK |
+| Request corruption | Complete | A selected URL points to the wrong year; [request log](../evidence/request.jsonl) |
+| Incomplete information | Complete | A revenue sentence is removed while result fields remain valid; [omission log](../evidence/omission.jsonl) |
+| A clear consequence of wrong tool data | Complete | Correct arithmetic produces the wrong 50% report; the independent checker detects it |
+| Automated tests and checked fixes | Complete | 58 tests, including cancellation, timeout, shutdown, malformed results and evidence-write failure |
+| Name, architecture and readable explanations | Complete | Author named in the README, architecture diagram, design notes and [walkthrough](walkthrough.md) |
+| Coding assistance disclosed | Complete | Short statement and tool list in [tools.md](tools.md) |
+| Local execution without paid resources | Complete | Fictional local pages, safe arithmetic, no model API or credentials |
+
+## What this package establishes
+
+The prototype meets the Part 2 Option A requirements. Its repeatability claim assumes the same configuration and ordered requests; it does not promise identical timing or control an LLM's choices. A full agent system, separate web/math deployments and live web sources are unnecessary for this small proxy demonstration.
+
+Part 1, Part 3 and the final written PDF are separate deliverables. The repository supplies the Part 2 code, results and tools statement to accompany that PDF. Passing these tests establishes the listed behaviours in the tested environment; it does not predict an assessment outcome.

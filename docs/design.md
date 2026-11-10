@@ -1,21 +1,44 @@
-# MCP-FaultLab design
+# Design notes
 
-Build a small real stdio MCP proxy with deterministic configurable interventions and auditable evidence. The implementation is independent of an LLM and does not claim to implement a multi-agent workflow.
+The proxy has one job: change selected MCP calls in a controlled way while leaving the other messages alone. It uses local standard input and output pipes, so the demo can run on a laptop without a web service, model or API account. The [README diagram](../README.md#architecture) shows the processes and data flow.
 
-Use Python 3.11+, official MCP SDK 2.3.0 and explicit protocol 2026-07-28 in the demo. Client and toy server are real SDK subprocesses. The proxy forwards unmodified JSON-lines byte-for-byte and parses copies for request/result correlation. One upstream process per proxy. Discovery, listing, notifications, metadata, IDs and unmatched traffic pass through. Logs never use protocol stdout.
+## How a call moves through the proxy
 
-Five mechanisms: response delay; post-execution tool-error replacement; plausible revenue corruption; valid request URL replacement; deletion of a factual sentence while preserving response schema. Only one active rule per configuration. The three response mechanisms are the core; all five are delivery targets. Changes to structured results and their JSON text copies stay consistent. Unsupported shapes are skipped and logged, never reported as injected.
+The client sends a request. The proxy reads a copy to identify its request ID and tool name, chooses whether the rule applies, and forwards the request. Request corruption changes the configured argument at this point.
 
-Config declares tool, mechanism, probability, seed, optional eligible-call number and parameters. Stable SHA-256 selection uses canonical config and per-target-tool request ordinal. Same ordered requests/config yield identical decisions; neither wall-clock timing nor an LLM's calls are promised identical. A probability is not an exact finite-sample quota. Assign decisions on request receipt. No fault combinations.
+When the server replies, the proxy uses the request ID to find the original call. A selected response can be delayed, replaced with a tool error, given a wrong fact, or have a fact removed. If the result does not match the supported structure, it is forwarded unchanged and the reason is logged.
 
-Delay only the selected response without blocking other traffic. Serialize writes. Forward cancellation and cancel a held response. Clean up children on EOF or failure. Track typed request IDs. Fail closed on invalid configuration or inability to record evidence. No silent unlogged injections.
+Normal messages keep their original bytes. Parsing a copy avoids unnecessary changes to formatting, IDs or metadata. The client and server use the official MCP SDK 2.3.0, with protocol 2026-07-28 selected in the demo.
 
-Evidence records sequence/run/request/tool/rule/config/seed, original and transformed digests, exact toy-data change, requested and observed delay, and applied/skipped/cancelled outcomes. Fault events are distinct from delivery events. Diagnostics, raw transport captures and independent report assessment are separate.
+## Where the work lives
 
-Use local synthetic pages and safe arithmetic. The independent expected growth is 20%; changing 120 to 150 against a prior 100 yields 50%, which must be reported as wrong. Completion and correctness are separate outcomes. Subsequent successful calls establish proxy liveness, not LLM recovery.
+| File | Responsibility |
+| --- | --- |
+| `policy.py` | Validate the JSON rule and choose target calls |
+| `injectors.py` | Make a changed copy of a supported request or result |
+| `proxy.py` | Forward messages, match replies to requests and manage delayed replies |
+| `evidence.py` | Write each event to a separate JSONL file |
+| `toy_server.py` | Serve fictional pages and evaluate bounded arithmetic |
+| `demo.py` | Run the conditions and check the answers against known values |
 
-Validate actual MCP integration, raw preservation, config rejection, selection replay, tool isolation, five fault outcomes, valid envelopes/schema, logging, concurrent replies, cancellation, EOF and process failures. No arbitrary code evaluation or real network fixtures. Demonstration and tests must run from a clean installation.
+One proxy wraps one server process. The demo puts all three tools in that server to keep the example small. The proxy can wrap another local stdio server using the same command interface.
 
-The proxy does not add retries, alter the server's business logic, fetch real web pages, intercept framework-only agent messages, support HTTP, establish cryptographic integrity, or prove universal correctness. It can pass through other valid messages, but only the documented tool-result forms are fault targets. An injected tool error is produced after the underlying tool has executed. State that limitation for tools with side effects.
+## Why these choices
 
-The repository contains original code and documentation only. No third-party assignment, private email or credentials belongs here. Final Part 2 delivery is code, README with choices/limitations, automated tests and actual short demo logs. Other written assignment sections are outside this implementation.
+**Choose calls before replies arrive.** The rule uses a SHA-256 value derived from the configuration, seed, tool and received target-call number. Two runs with the same ordered calls make the same choices even if their replies arrive in different orders. A probability controls selection; it does not set an exact quota for a short run.
+
+**Keep one rule per run.** A single active fault makes its effect easier to trace. The five mechanisms cover late replies, visible errors, wrong facts, changed inputs and missing facts. Combined faults would need a separate policy for ordering and interpreting their effects.
+
+**Preserve the result structure.** The SDK validates candidate tool results. Text changes update both the structured result and its JSON text copy. Omission removes a sentence from `page_text`, leaving the result's required fields in place.
+
+**Handle waiting and cancellation separately.** A delayed reply gets its own asynchronous task, allowing other replies through. Cancellation releases its active request slot immediately and cancels a held reply. Client EOF cancels holds before the proxy waits for the server to stop. Writes are serialized so two replies cannot mix their bytes.
+
+**Record the change before sending it.** Each applied fault has a log entry with its request, rule, change and message hashes. A failed evidence write stops the run. Application and delivery are separate events because a connection can fail after the change is made.
+
+**Check the facts as well as the arithmetic.** The demo's known figures are 100 and 120, giving 20% growth. Changing 120 to 150 produces 50%. The calculator works, but the final answer is wrong. The checker compares both the source figures and the result, after the workflow has used only tool observations.
+
+## Scope
+
+The error fault replaces a reply after the tool has executed; it cannot undo side effects. The demo tools have no external side effects. The proxy does not add retries, repair answers, intercept internal agent messages, or run a three-agent system.
+
+Supported transports, result shapes, resource bounds and untested platforms are listed in the [README limits](../README.md#limits). The [verification record](verification.md) gives the executed tests and measured results.

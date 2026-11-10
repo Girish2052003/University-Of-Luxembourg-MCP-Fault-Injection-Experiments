@@ -1,6 +1,10 @@
 # MCP-FaultLab
 
-A small, reproducible **stdio MCP fault-injection proxy**. It sits between an MCP client and an existing server, forwards unaffected messages unchanged, and applies configurable faults to selected tool calls. A real official-SDK client/server demo shows the difference between finishing a workflow and producing a correct answer.
+**Author: Girish Nallan Chakravathy**
+
+MCP-FaultLab is a small Python proxy for testing what happens when tools return late, fail, or give wrong information. It sits between an MCP client and server, passes normal messages through unchanged, and changes selected calls according to a JSON rule.
+
+The demo uses the official MCP Python SDK. It shows a simple failure: a calculator can do the arithmetic correctly and still produce the wrong answer because the source figures were changed.
 
 **No LLM, API key, paid service, or network access is used by the demonstrations.** Package installation requires access to Python packages. All company names, pages and figures in the demo are synthetic.
 
@@ -31,17 +35,33 @@ python -m pytest -q
 
 The output directory must be new. For another run, use `--output local-evidence/run-02`. This preserves earlier evidence instead of overwriting it. No Docker, browser, external web server or account is needed.
 
-The checked-in [measured report](evidence/REPORT.md) and [machine-readable outcomes](evidence/summary.json) show an actual run. [Verification](docs/verification.md) records the tested environment and checks. These are small demonstrations, not LLM robustness measurements.
+The saved [demo report](evidence/REPORT.md) and [results](evidence/summary.json) come from an actual run. [Verification](docs/verification.md) records the test environment and results. The demo checks the proxy's behaviour; measuring LLM robustness would need a separate experiment.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    C["MCP client"] -->|Requests| P["FaultLab proxy"]
+    P -->|Tool calls| S["MCP server"]
+    S -->|Tool results| P
+    P -->|Replies| C
+    R["JSON fault rule"] --> P
+    P -->|Fault events| L["JSONL log"]
+    C -->|Observed figures| V["Independent answer check"]
+    V --> D["Demo report"]
+```
+
+The client, proxy and server run as separate local processes. The proxy chooses calls using the configured tool, probability, seed and call number. Request corruption happens before the server receives a call; the other four faults affect its reply. The answer check runs in the demo client after the workflow and never supplies answers to it. [Design notes](docs/design.md) explain the modules and choices.
 
 ## What the demonstration does
 
-An actual SDK client calls three actual MCP tools in a subprocess server:
+The SDK client calls three tools in the demo server:
 
 1. `web_search(query)` finds a local fixture URL.
 2. `fetch_page(url)` returns a status, headers and page text.
 3. `calculator(expression)` computes growth using bounded arithmetic, without Python `eval`.
 
-The clean fixture contains FY2024 revenue 100 and FY2025 revenue 120, giving 20% growth. An independent answer checker knows those fixed reference facts. The workflow itself consumes only the tool observations.
+The local test page contains FY2024 revenue of 100 and FY2025 revenue of 120, giving 20% growth. The workflow uses the tool replies to calculate its answer. A separate check then compares that answer and its source figures with the known correct values.
 
 | Condition | Intervention | Expected observable outcome |
 | --- | --- | --- |
@@ -53,7 +73,7 @@ The clean fixture contains FY2024 revenue 100 and FY2025 revenue 120, giving 20%
 | Request | Replace the FY2025 fixture URL with its FY2024 URL | Requested year is unavailable; client reports incomplete |
 | Omission | Remove one required factual sentence from page text | Response remains schema-valid; client reports incomplete |
 
-The demo also repeats 20 calls twice at configured probability 0.4 with seed 42, comparing decision sequences. An observed finite-run fraction need not equal the configured probability. Error/request/omission handling is this deterministic client's behaviour, not evidence about an LLM agent.
+The demo also makes 20 calls, restarts the proxy, and repeats the same calls with probability 0.4 and seed 42. Both runs select the same calls. A probability of 0.4 does not require exactly 8 of 20 calls to be selected. The responses to errors and missing data come from this fixed client program; they do not measure how an LLM would react.
 
 ## Use the proxy with an MCP client
 
@@ -68,7 +88,7 @@ python -m faultlab.proxy \
 
 The log's parent directory must exist and its filename must be new. This command waits for MCP JSON-lines on stdin; it is intended to be launched by an MCP client. The demo does this automatically.
 
-Replace the command after `--` with another local stdio MCP server. It is executed as an argument vector, not a shell command. One proxy instance wraps one server. Latency and error target successful modern tool results; content/request transforms support the documented shapes and exact configured matches below. An unsupported result is forwarded unchanged and a skip reason is recorded.
+The command after `--` can launch another local stdio MCP server. The proxy starts it directly with the supplied arguments, without a shell. Each proxy wraps one server. Latency and error injection apply to successful tool results in the tested protocol version. The text and request changes need the shapes and exact matches listed below. If a result does not match, the proxy passes it through unchanged and logs why it skipped the change.
 
 ## Configuration
 
@@ -101,22 +121,22 @@ See [config/](config/). Each file defines **one active rule**; faults are not st
 
 | Fault | Parameters | Applicability |
 | --- | --- | --- |
-| Latency | `delay_ms`:0..60000 | Successful `resultType: complete` response |
+| Latency | `delay_ms`: 0 to 60000 | Successful `resultType: complete` response |
 | Error | `message`: non-empty string | Successful `resultType: complete` response |
 | Semantic | `old`, `new`: different non-empty strings | Exactly one old span in `structuredContent.page_text`; one consistent JSON text copy |
 | Request | `argument`, `old`, `new`: non-empty strings; old != new | Exact original value in `params.arguments[argument]` |
 | Omission | `old`: non-empty string | Exactly one old span in page text; one consistent JSON text copy |
 
-Invalid/unknown settings fail before launching the server. Candidate tool results are validated with the pinned SDK before an injection is applied. A selected but inapplicable rule is **skipped**, not silently counted as an injection. Semantic/omission transforms keep required `status`, `headers` and `page_text` fields and update both representations. They do not delete a required schema property.
+Invalid or unknown settings stop the proxy before it launches the server. The SDK checks the tool result's structure before a response fault is applied. If a selected rule cannot make its intended change, the log records **skipped**. Semantic corruption and omission keep the `status`, `headers` and `page_text` fields and update both the structured result and its JSON text copy.
 
 ## Design choices
 
-- **Transparent byte forwarding:** parsed copies are used for routing; unmodified frames retain their original bytes, IDs and metadata. Discovery, listing, notifications, protocol errors and unrelated calls are not rewritten. There is ordinary process/parse/log overhead; unchanged content does not mean zero latency.
-- **Deterministic policy:** SHA-256 of the canonical config, seed, tool and received target-call ordinal. Selection happens before a response arrives, so response completion order cannot change decisions. Reproducibility assumes the same ordered request sequence. It does not control an LLM, network timing or timestamps.
-- **One delayed reply, not a stalled stream:** asynchronous per-response holds allow unrelated replies through. Client cancellation discards the held reply. EOF and errors clean up the wrapped process.
-- **Tool errors, not malformed protocol messages:** the injected result has `isError: true`; JSON-RPC errors are a separate mechanism. The real tool has already executed before this replacement. Do not interpret it as proof that a tool with side effects did nothing.
-- **Separate evidence:** protocol stdout contains only MCP traffic. JSONL records go to a specified file; diagnostics go to stderr. Evidence failures stop the run. Exclusive log creation protects previous runs.
-- **Independent assessment:** source facts and calculated growth are checked separately from workflow completion. The answer sheet is never used to repair the workflow's observations.
+- **Keep normal messages unchanged.** The proxy reads a parsed copy to identify the call and forwards the original bytes when no change is needed. IDs, metadata, discovery, listing, notifications and protocol errors stay intact. Starting processes, parsing messages and writing logs still add some overhead.
+- **Choose faults when requests arrive.** SHA-256 combines the consistently encoded configuration, seed, tool and target-call number. Replies arriving in a different order do not change those choices. Repeating the same configuration and ordered calls gives the same decisions; timestamps and an LLM's choice of calls can still vary.
+- **Delay only the selected reply.** Separate asynchronous tasks let other replies pass while one is held. Cancellation discards a held reply, and shutdown cleans up the server process.
+- **Return a valid tool error.** Error injection sets `isError: true` in the tool result. A JSON-RPC error is different and is passed through unchanged. The real tool has already run before its reply is replaced, so this fault does not undo any side effects.
+- **Keep logs off protocol stdout.** Fault records go to a JSONL file and diagnostics go to stderr. If evidence cannot be written, the run stops. Existing log files are never overwritten.
+- **Check correctness separately.** The demo checks both source figures and calculated growth. It keeps the reference answers outside the workflow, so they cannot silently repair an incorrect tool reply.
 
 See [design](docs/design.md), [requirements and evidence map](docs/requirements.md) and [code walkthrough](docs/walkthrough.md).
 
@@ -124,7 +144,7 @@ See [design](docs/design.md), [requirements and evidence map](docs/requirements.
 
 `evidence/` contains a checked run; reruns go to your selected output directory.
 
-- `REPORT.md`: compact results for a human reader.
+- `REPORT.md`: a short table of measured results.
 - `summary.json`: completion, independent correctness, observed/reference figures and replay decisions.
 - `*.observations.jsonl`: what the deterministic client observed, with call durations; these are not raw wire captures.
 - `disabled.jsonl`, `latency.jsonl`, `error.jsonl`, `semantic.jsonl`, `request.jsonl`, `omission.jsonl`: proxy events, including every applied intervention.
@@ -132,21 +152,22 @@ See [design](docs/design.md), [requirements and evidence map](docs/requirements.
 - `configs/`: exact configurations used.
 - `environment.json`: Python/SDK/protocol versions and hashes of the implementation source files.
 - `tests.txt`: captured output from the complete suite in a clean installation.
+- `recheck-tests.txt`: the full test run after the documentation and message wording update.
 
-Each applied intervention includes request ID, tool, ordinal, rule, seed, config hash, direction, exact synthetic-data change and before/after message hashes. Delay records distinguish scheduling, application, cancellation and delivery. Hashes identify content; they are not signatures or tamper-proof storage. An applied record preceding a broken transport does not establish delivery; response delivery has a separate event.
+Each applied fault records the request ID, tool, call number, rule, seed, configuration hash, direction and details of the change. It also records hashes of the messages before and after the change. Delay events show when a reply was scheduled, changed, cancelled or delivered. These hashes help identify the data but do not prevent log tampering. A changed reply may still fail to reach the client, so delivery is recorded separately.
 
 ## Limits
 
-- Tested MCP revision 2026-07-28 and SDK 2.3.0; no claim of cross-version conformance. HTTP, authentication, subscriptions/MRTR fault injection and distributed deployment are outside scope. Untargeted traffic is forwarded, not fully validated.
-- Tool-result transforms are deliberately narrow. This is not a universal semantic editor for arbitrary schemas or multi-content results. The real SDK client validates its declared output shapes in integration tests.
-- One process per server; maximum 4 MiB per line and 1024 in-flight requests. Duplicate active request IDs fail rather than being mis-correlated. Use fresh IDs for new requests. Cancellation releases active capacity immediately; the last 1024 cancelled IDs are retained to discard late replies. A new request using one of those IDs clears its cancellation record, so an upstream late reply after ID reuse cannot be distinguished from the new reply.
-- Cancellation/EOF cancels held replies immediately, including while the server drains during shutdown. Abrupt termination or a host/power failure can lose buffered OS writes; JSONL is flushed, not a durable transactional journal.
-- No built-in agent retries or automatic repair. The toy client safely stops on obvious errors/missing years but trusts a plausible revenue value. It is not a model, three-agent system, or statistical evaluation.
-- Positive examples establish measured behaviours; tests do not constitute formal proof. macOS is a POSIX design target but was not independently tested. On Windows use WSL.
+- Compatibility was tested with MCP revision 2026-07-28 and SDK 2.3.0. HTTP, authentication, subscriptions, multi-round tool request faults and distributed deployment are outside this implementation. Messages outside the selected calls pass through without full validation.
+- Text changes support the documented result shape. Other schemas or results with several content blocks may be skipped. The real SDK client checks the demo server's declared output structure in integration tests.
+- Each proxy wraps one server process, with limits of 4 MiB per line and 1024 active requests. Duplicate active IDs stop the run. Cancellation frees a slot immediately and retains the last 1024 cancelled IDs to discard late replies. Reusing a cancelled ID clears that record; a later reply to the old call would then be indistinguishable from the new one. Fresh IDs avoid this ambiguity.
+- Cancellation and client EOF cancel held replies immediately, including during server shutdown. Logs are flushed after each event, but an abrupt stop or power failure can still lose operating-system buffers.
+- The client stops on errors or missing years, but trusts a plausible revenue value. It has no automatic retries or repair. It is a fixed test program, so its behaviour cannot establish how an LLM or three-agent system would respond.
+- Tests cover the listed cases rather than proving every possible execution. Linux/Python 3.12 was tested. The design uses POSIX pipes and is intended for macOS too, but macOS was not tested. Windows users need WSL.
 
-## Tools and authorship
+## Development tools
 
-Implementation, tests and documentation were produced with OpenAI Codex assistance and checked through executable tests and real SDK runs. See [AI-use record](docs/ai-use.md). No university-provided assignment PDF, private email, or credentials is included. Review the code and measured evidence before using it in a submission or discussing its design.
+A coding agent helped with the design, implementation, debugging, tests and documentation. The code was checked with pytest and real MCP client/server runs. [Tools used](docs/tools.md) gives the short disclosure. The repository contains the implementation and its results; the university's assignment PDF and private emails are excluded.
 
 ## Protocol references
 

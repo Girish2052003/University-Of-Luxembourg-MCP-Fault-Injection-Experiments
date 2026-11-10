@@ -1,34 +1,27 @@
-# MCP-FaultLab Implementation Plan
+# Implementation notes
 
-**Goal:** Deliver a runnable, verified Part 2 prototype with five mechanisms and measured evidence.
-**Architecture:** Raw stdio forwarding; official SDK endpoints; pure deterministic policy/transforms; separate JSONL evidence and external correctness checks.
-**Tech stack:** Python 3.11+, MCP 2.3.0, pytest 9.2.0.
-**Spec:** [design.md](design.md).
+MCP-FaultLab was built in three stages: the fault rules, the real MCP connection, and the demo with its checks. Python keeps the example small, while the official SDK provides the client and server used to test it.
 
-## Global constraints
-No model/API cost. Protocol 2026-07-28. Untouched bytes preserved. No private assignment files. All five mechanisms, test evidence, README, clean-install verification. Approved for continuous implementation.
+## 1. Rules, changes and logs
 
-## Review focus
-Malformed or unsupported result shapes must not produce fake applied events; cancellation must suppress held replies; duplicate numeric/string IDs must not be conflated; evidence failures must stop injection; errors/EOF must not leave child processes running. Tests below own these behaviours.
+`Config.from_dict` checks the configuration before the server starts. `Policy.decide` counts calls to the selected tool and chooses which ones receive a fault. The transformation functions return a changed copy or a reason for skipping the change.
 
-## Task 1: Configuration, policy, transformations and evidence
-Files: src/faultlab/{policy,injectors,evidence}.py; tests/test_core.py.
-Interfaces: Config.from_dict(dict); Policy.decide(tool)->Decision|None; transform_request/transform_response(dict,Config)->(dict|None,detail); Evidence.emit(event,**fields).
-- [x] Write behavioural tests for invalid configs, p0/p1, deterministic intermediate probability and tool isolation, transformations preserving IDs/schema/content copies, skipped shapes, evidence sequencing/digests.
-- [x] Run pytest tests/test_core.py; confirm missing implementation failures.
-- [x] Implement pure core and logger; rerun until all pass; commit.
+`Evidence.emit` writes one JSON event at a time. Every event carries the run and configuration identity. Existing log files are protected from overwriting.
 
-## Task 2: Real MCP server and transparent async proxy
-Files: src/faultlab/{toy_server,proxy}.py; tests/test_integration.py; tests/wire_server.py; tests/test_regressions.py.
-Interfaces: python -m faultlab.toy_server; python -m faultlab.proxy --config PATH --log PATH -- COMMAND [ARGS].
-- [x] Write SDK integration tests for baseline/list/call, five mechanisms, raw forwarding, subsequent success after error; real-process tests for out-of-order responses, concurrent latency, cancellation, EOF and child failure.
-- [x] Run tests before implementation; confirm subprocess/feature failures.
-- [x] Implement bounded forwarding and lifecycle management; verify all tests; commit.
+The core tests cover invalid settings, probabilities 0 and 1, repeated selection sequences, tool targeting, preserved result fields and log contents.
 
-## Task 3: Reproducible demonstration, packaging and documentation
-Files: src/faultlab/demo.py; config/*.json; tests/test_demo.py; README.md; docs/{requirements,verification,ai-use}.md; evidence/*.
-Interface: python -m faultlab.demo --output local-evidence; python -m pytest -q.
-- [x] Write subprocess demo test for direct/disabled/five conditions, independent correctness, actual injection evidence and reproducible decisions; confirm missing module.
-- [x] Implement demo, run and retain actual logs; document one command per entry point and precise limitations.
-- [x] Lock dependencies, run tests/demo from a clean environment and create a clean package; final independent code review and verified fixes.
-- [x] Publish original implementation and evidence to the supplied repository, verify remote contents, link ready package.
+## 2. The client, proxy and server
+
+The proxy connects a client to a server through local pipes. It keeps numeric and string request IDs separate, forwards normal messages unchanged, and delays selected replies without blocking other traffic.
+
+The server supplies `web_search`, `fetch_page` and `calculator`. Test pages are local and fictional. The calculator accepts a small set of arithmetic operations and never uses Python `eval`.
+
+Integration tests exercise all five faults through the official SDK. Additional process tests check unchanged bytes, concurrent replies, cancellation, client timeouts, invalid startup settings and server failure.
+
+## 3. Demonstration and delivery
+
+The demo runs a direct baseline, a disabled proxy and each of the five faults. A separate correctness check compares the observed figures and calculated growth with the reference values. Two restarted runs also compare the fault decisions for the same 20 calls.
+
+The package includes the source, JSON configurations, tests, installation instructions, design notes, known limitations and measured logs. Dependencies are pinned in `requirements.lock`. A fresh installation passed all 58 tests and ran the standalone demo.
+
+The [verification record](verification.md) describes the review fixes and executed checks. [Part 2 coverage](requirements.md) maps the deliverables to their implementation and evidence. [Tools used](tools.md) records the coding assistance.

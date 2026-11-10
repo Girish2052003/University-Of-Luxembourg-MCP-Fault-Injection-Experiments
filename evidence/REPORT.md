@@ -4,13 +4,13 @@ Synthetic fixtures; no LLM/API calls. Each row is one execution, not a statistic
 
 | Condition | Workflow completed | Independently correct | Growth (%) | Workflow ms | Tool calls |
 | --- | --- | --- | --- | --- | --- |
-| direct | True | True | 20.0 | 51.13 | 3 |
-| disabled | True | True | 20.0 | 11.19 | 3 |
-| latency | True | True | 20.0 | 231.78 | 3 |
-| error | False | False | None | 6.22 | 2 |
-| semantic | True | False | 50.0 | 11.25 | 3 |
-| request | False | False | None | 8.57 | 2 |
-| omission | False | False | None | 7.49 | 2 |
+| direct | True | True | 20.0 | 45.49 | 3 |
+| disabled | True | True | 20.0 | 9.54 | 3 |
+| latency | True | True | 20.0 | 212.52 | 3 |
+| error | False | False | None | 5.55 | 2 |
+| semantic | True | False | 50.0 | 10.92 | 3 |
+| request | False | False | None | 7.74 | 2 |
+| omission | False | False | None | 7.34 | 2 |
 
 Replay: 11 selected calls out of 20 at configured p=0.4; two runs give identical decisions: True.
 

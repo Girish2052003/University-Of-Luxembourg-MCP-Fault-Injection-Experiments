@@ -41,10 +41,10 @@ class Config:
         if type(v["enabled"]) is not bool or type(v["seed"]) is not int:
             raise ValueError("enabled must be boolean and seed must be integer")
         if not _text(v["tool"]) or len(v["tool"]) > 128:
-            raise ValueError("tool must be a non-empty name of at most128 characters")
+            raise ValueError("tool must be a non-empty name of at most 128 characters")
         p = v["probability"]
         if type(p) not in (int, float) or not math.isfinite(p) or not 0 <= p <= 1:
-            raise ValueError("probability must be a finite number between0 and1")
+            raise ValueError("probability must be a finite number between 0 and 1")
         n = v["occurrence"]
         if n is not None and (type(n) is not int or n < 1):
             raise ValueError("occurrence must be null or a positive integer")
@@ -56,7 +56,7 @@ class Config:
         if f == "latency":
             ms = args["delay_ms"]
             if type(ms) not in (int, float) or not math.isfinite(ms) or not 0 <= ms <= 60000:
-                raise ValueError("delay_ms must be finite and between0 and60000")
+                raise ValueError("delay_ms must be finite and between 0 and 60000")
         elif not all(_text(x) for x in args.values()):
             raise ValueError("fault parameters must be non-empty strings")
         if f in {"semantic", "request"} and args["old"] == args["new"]:
