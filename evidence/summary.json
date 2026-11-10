@@ -1,0 +1,241 @@
+{
+  "data": "synthetic; no LLM and no real-company claims",
+  "conditions": [
+    {
+      "condition": "direct",
+      "workflow_completed": true,
+      "verified_correct": true,
+      "assessment": "correct_report",
+      "growth_percent": 20.0,
+      "observed_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "expected_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "workflow_ms": 51.127161999829696,
+      "tool_calls": 3,
+      "model_tokens": 0
+    },
+    {
+      "condition": "disabled",
+      "workflow_completed": true,
+      "verified_correct": true,
+      "assessment": "correct_report",
+      "growth_percent": 20.0,
+      "observed_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "expected_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "workflow_ms": 11.18540999959805,
+      "tool_calls": 3,
+      "model_tokens": 0
+    },
+    {
+      "condition": "latency",
+      "workflow_completed": true,
+      "verified_correct": true,
+      "assessment": "correct_report",
+      "growth_percent": 20.0,
+      "observed_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "expected_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "workflow_ms": 231.77633300019806,
+      "tool_calls": 3,
+      "model_tokens": 0
+    },
+    {
+      "condition": "error",
+      "workflow_completed": false,
+      "verified_correct": false,
+      "assessment": "tool_error",
+      "growth_percent": null,
+      "observed_report": {},
+      "expected_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "workflow_ms": 6.217105000359879,
+      "tool_calls": 2,
+      "model_tokens": 0
+    },
+    {
+      "condition": "semantic",
+      "workflow_completed": true,
+      "verified_correct": false,
+      "assessment": "wrong_completed_report",
+      "growth_percent": 50.0,
+      "observed_report": {
+        "prior": 100.0,
+        "current": 150.0,
+        "growth_percent": 50.0
+      },
+      "expected_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "workflow_ms": 11.245843999859062,
+      "tool_calls": 3,
+      "model_tokens": 0
+    },
+    {
+      "condition": "request",
+      "workflow_completed": false,
+      "verified_correct": false,
+      "assessment": "incomplete",
+      "growth_percent": null,
+      "observed_report": {},
+      "expected_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "workflow_ms": 8.573173000513634,
+      "tool_calls": 2,
+      "model_tokens": 0
+    },
+    {
+      "condition": "omission",
+      "workflow_completed": false,
+      "verified_correct": false,
+      "assessment": "incomplete",
+      "growth_percent": null,
+      "observed_report": {},
+      "expected_report": {
+        "prior": 100.0,
+        "current": 120.0,
+        "growth_percent": 20.0
+      },
+      "workflow_ms": 7.494026999665948,
+      "tool_calls": 2,
+      "model_tokens": 0
+    }
+  ],
+  "replay": {
+    "same_decisions": true,
+    "calls_per_run": 20,
+    "selected_count": 11,
+    "schedule": [
+      {
+        "ordinal": 1,
+        "selected": false,
+        "draw": 0.47097502075319553
+      },
+      {
+        "ordinal": 2,
+        "selected": false,
+        "draw": 0.4869943402677184
+      },
+      {
+        "ordinal": 3,
+        "selected": true,
+        "draw": 0.18700447494285488
+      },
+      {
+        "ordinal": 4,
+        "selected": true,
+        "draw": 0.38186814130157076
+      },
+      {
+        "ordinal": 5,
+        "selected": false,
+        "draw": 0.9222241921772929
+      },
+      {
+        "ordinal": 6,
+        "selected": true,
+        "draw": 0.25085558632456373
+      },
+      {
+        "ordinal": 7,
+        "selected": true,
+        "draw": 0.32498658629783495
+      },
+      {
+        "ordinal": 8,
+        "selected": true,
+        "draw": 0.2614355073977558
+      },
+      {
+        "ordinal": 9,
+        "selected": true,
+        "draw": 0.20479869862529454
+      },
+      {
+        "ordinal": 10,
+        "selected": true,
+        "draw": 0.34147795540532044
+      },
+      {
+        "ordinal": 11,
+        "selected": false,
+        "draw": 0.5897255804850813
+      },
+      {
+        "ordinal": 12,
+        "selected": true,
+        "draw": 0.36494785335733626
+      },
+      {
+        "ordinal": 13,
+        "selected": true,
+        "draw": 0.061360737909616714
+      },
+      {
+        "ordinal": 14,
+        "selected": false,
+        "draw": 0.4154873502132298
+      },
+      {
+        "ordinal": 15,
+        "selected": false,
+        "draw": 0.8817510858075444
+      },
+      {
+        "ordinal": 16,
+        "selected": false,
+        "draw": 0.9971063353605192
+      },
+      {
+        "ordinal": 17,
+        "selected": true,
+        "draw": 0.1592831805558501
+      },
+      {
+        "ordinal": 18,
+        "selected": true,
+        "draw": 0.29658427318639147
+      },
+      {
+        "ordinal": 19,
+        "selected": false,
+        "draw": 0.41284147358194145
+      },
+      {
+        "ordinal": 20,
+        "selected": false,
+        "draw": 0.5666502165173374
+      }
+    ],
+    "scope": "same config and ordered target calls; timestamps, process IDs and wall-clock latency excluded"
+  }
+}

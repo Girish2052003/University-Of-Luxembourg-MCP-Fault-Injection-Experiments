@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "seed": 42,
+  "tool": "fetch_page",
+  "fault": "error",
+  "probability": 1.0,
+  "occurrence": 1,
+  "parameters": {
+    "message": "Synthetic upstream service unavailable"
+  }
+}

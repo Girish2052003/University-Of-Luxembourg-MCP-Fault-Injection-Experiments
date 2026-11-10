@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "seed": 42,
+  "tool": "fetch_page",
+  "fault": "request",
+  "probability": 1.0,
+  "occurrence": 1,
+  "parameters": {
+    "argument": "url",
+    "old": "fixture://acme/2025",
+    "new": "fixture://acme/2024"
+  }
+}

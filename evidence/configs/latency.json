@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "seed": 42,
+  "tool": "fetch_page",
+  "fault": "latency",
+  "probability": 1.0,
+  "occurrence": 1,
+  "parameters": {
+    "delay_ms": 200
+  }
+}

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-faultlab"
+version = "1.0.0"
+description = "A reproducible local MCP fault-injection proxy with independently checked demonstrations"
+requires-python = ">=3.11"
+dependencies = ["mcp==2.3.0"]
+
+[project.optional-dependencies]
+test = ["pytest==9.2.0"]
+
+[project.scripts]
+mcp-faultlab = "faultlab.proxy:main"
+mcp-faultlab-demo = "faultlab.demo:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"

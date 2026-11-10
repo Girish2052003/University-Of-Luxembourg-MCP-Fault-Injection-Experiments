@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "seed": 42,
+  "tool": "fetch_page",
+  "fault": "omission",
+  "probability": 1.0,
+  "occurrence": 1,
+  "parameters": {
+    "old": "Revenue FY2025: EUR 120 million.\n"
+  }
+}

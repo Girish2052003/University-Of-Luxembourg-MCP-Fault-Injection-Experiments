@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "seed": 42,
+  "tool": "fetch_page",
+  "fault": "semantic",
+  "probability": 1.0,
+  "occurrence": 1,
+  "parameters": {
+    "old": "Revenue FY2025: EUR 120 million.",
+    "new": "Revenue FY2025: EUR 150 million."
+  }
+}
