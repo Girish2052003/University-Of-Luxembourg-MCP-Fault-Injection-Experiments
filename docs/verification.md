@@ -38,6 +38,8 @@ The reviewer reported no additional material blocker in the reviewed scope. The 
 
 The standalone demo was run from the clean installation. [REPORT.md](../evidence/REPORT.md) contains measured outcomes, [summary.json](../evidence/summary.json) contains the independent verdicts, and [environment.json](../evidence/environment.json) records source SHA-256 hashes and versions. The source hashes were checked against the files included in the final repository tree.
 
+Publication was checked by comparing the complete Git tree SHA on GitHub with the local package, then reading back the `main` branch reference. The package contains original source, documentation and synthetic evidence; it excludes the university's assignment PDF, emails, virtual environments and temporary files.
+
 Baseline and disabled-proxy conditions produce the independently correct 20% growth. Semantic corruption produces a completed 50% answer that the independent checker rejects. Error, wrong-year request and missing-fact conditions prevent completion. Two separately started 20-call runs produce the same decision sequence. These are controlled demonstrations, not estimated failure rates for LLM agents.
 
 Native Windows, macOS execution, other Python/SDK/protocol versions, HTTP transport, distributed operation and LLM recovery were not verified. The tests are executable evidence for these specific behaviours, not a formal proof or universal protocol conformance claim. The README documents operational bounds and cancellation-history limits.

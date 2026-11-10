@@ -31,4 +31,4 @@ Interface: python -m faultlab.demo --output local-evidence; python -m pytest -q.
 - [x] Write subprocess demo test for direct/disabled/five conditions, independent correctness, actual injection evidence and reproducible decisions; confirm missing module.
 - [x] Implement demo, run and retain actual logs; document one command per entry point and precise limitations.
 - [x] Lock dependencies, run tests/demo from a clean environment and create a clean package; final independent code review and verified fixes.
-- [ ] Publish original implementation and evidence to the supplied repository, verify remote contents, link ready package.
+- [x] Publish original implementation and evidence to the supplied repository, verify remote contents, link ready package.
